@@ -103,6 +103,41 @@ Truy cập `http://địa-chỉ-server/info.php` — nếu hiện bảng thông 
 
 LEMP là biến thể của **LAMP**, chỉ khác ở chỗ thay web server **Apache** bằng **Nginx**. Bộ này phối hợp với nhau để: Nginx nhận yêu cầu từ trình duyệt → chuyển phần xử lý động cho PHP → PHP truy vấn dữ liệu từ MySQL → trả kết quả về cho người dùng.
 
+**Luồng xử lý một request trong LEMP stack**
+
+Sơ đồ tuần tự dưới đây thể hiện các thành phần phối hợp với nhau khi có một yêu cầu trang động (`.php`):
+
+```mermaid
+sequenceDiagram
+    participant B as Trình duyệt
+    participant L as Linux (Hệ điều hành)
+    participant N as Nginx
+    participant P as PHP-FPM
+    participant M as MySQL
+
+    B->>L: HTTP request tới máy chủ (cổng 80/443)
+    L->>N: Chuyển kết nối cho Nginx (đang lắng nghe cổng)
+    Note over N: File tĩnh (.html, .css, ảnh) → Nginx trả về luôn
+    N->>P: File động (.php) → chuyển qua socket (FastCGI)
+    Note over P: Thực thi mã PHP
+    P->>M: Truy vấn dữ liệu (SQL query)
+    M-->>P: Trả về kết quả dữ liệu
+    Note over P: Ghép dữ liệu thành HTML
+    P-->>N: Trả HTML đã tạo cho Nginx
+    N-->>L: HTTP response
+    L-->>B: Gửi response về trình duyệt
+    Note over B: Render HTML → hiển thị trang
+```
+
+Giải thích vai trò từng lớp:
+
+1. **Linux** là nền tảng — nhận kết nối mạng từ trình duyệt qua cổng (80 cho HTTP, 443 cho HTTPS) và là môi trường chạy cho mọi dịch vụ bên dưới.
+2. **Nginx** nhận yêu cầu. Nếu là **file tĩnh** (HTML, CSS, ảnh) thì Nginx trả về ngay. Nếu là **file động** (`.php`) thì Nginx chuyển tiếp cho PHP-FPM qua socket (FastCGI).
+3. **PHP-FPM** thực thi mã PHP. Khi cần dữ liệu, nó **truy vấn MySQL**.
+4. **MySQL** trả về dữ liệu cho PHP-FPM.
+5. **PHP-FPM** ghép dữ liệu thành HTML hoàn chỉnh, trả ngược về **Nginx**.
+6. **Nginx** gửi HTTP response qua **Linux** về **trình duyệt** để hiển thị.
+
 ## 2. Nginx — Tại sao cần tới Nginx?
 
 Nginx (đọc là "Engine-X") là một **web server** hiệu năng cao, đồng thời có thể đóng vai trò **reverse proxy**, **load balancer** và **cache**. Lý do cần tới Nginx:

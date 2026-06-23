@@ -168,6 +168,40 @@ Tóm tắt luồng hoạt động: người dùng nhập URL ở **User Interfac
 ![Tổng quan về cách thức hoạt động của trình duyệt web](images/browser-architecture.png)
 
 
+## 7. Luồng tổng hợp: từ khi nhập URL đến khi thấy trang web
+
+Sơ đồ tuần tự (sequence diagram) dưới đây tóm tắt toàn bộ quá trình khi ta truy cập một trang web — gồm cả bước hỏi DNS:
+
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant B as Trình duyệt
+    participant D as Máy chủ DNS
+    participant S as Máy chủ web (Server)
+
+    U->>B: Nhập URL (vd: https://mozilla.org/docs)
+    Note over B: Kiểm tra DNS cache cục bộ
+    B->>D: Hỏi: mozilla.org có IP nào?
+    D-->>B: Trả về địa chỉ IP (vd: 93.184.x.x)
+    B->>S: Gửi HTTP request tới IP + đường dẫn /docs
+    Note over S: Xử lý yêu cầu, lấy tài nguyên /docs
+    S-->>B: Trả về HTTP response (mã HTML, status 200)
+    Note over B: Rendering Engine phân tích HTML/CSS/JS
+    B-->>U: Hiển thị trang web hoàn chỉnh
+```
+
+Giải thích các bước:
+
+1. **Người dùng** nhập URL vào trình duyệt.
+2. **Trình duyệt** kiểm tra bộ nhớ đệm DNS cục bộ xem đã biết IP của tên miền chưa.
+3. Nếu chưa, trình duyệt hỏi **máy chủ DNS** để lấy địa chỉ IP tương ứng với tên miền.
+4. **DNS** trả về địa chỉ IP của máy chủ web.
+5. Trình duyệt gửi **HTTP request** tới IP đó, kèm theo **đường dẫn (path)** để báo cần tài nguyên nào.
+6. **Máy chủ web** xử lý yêu cầu và trả về **HTTP response** (thường là mã HTML, kèm status code).
+7. **Trình duyệt** (Rendering Engine) phân tích HTML/CSS/JS và **hiển thị trang** cho người dùng.
+
+> Nếu IP đã có sẵn trong DNS cache (bước 2), trình duyệt bỏ qua bước hỏi DNS (bước 3–4) và đi thẳng tới máy chủ.
+
 ---
 ### Nguồn tham khảo
 <!-- Liệt kê các link/tài liệu đã đọc -->
