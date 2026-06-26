@@ -69,14 +69,14 @@ git cherry-pick A^..B       # nhặt một dải commit từ A đến B
 Trong các dự án thực tế, nhóm thường dùng mô hình **feature branch + Pull Request** (gần với *GitHub Flow*). Nhánh `main` luôn ở trạng thái chạy được; mọi công việc mới đều tách ra nhánh riêng rồi gộp về qua Pull Request sau khi được review.
 
 ```
-main  ──●────────────●───────────●──   (nhánh chính, luôn deploy được)
-         \          /            /
-          ●──●──●──/ (PR)       /
-        feat/tinh-nang-A       /
-                    \         /
-                     ●──●────/ (PR)
-                   feat/tinh-nang-B
+              feat/A:  ●──●──●
+             /                \  (PR merge A)
+main ──●────●──────────────────●─────────●──   (nhánh chính, luôn deploy được)
+             \                          /  (PR merge B)
+              feat/B:  ●──●──●─────────/
 ```
+
+> Lưu ý: `feat/A` và `feat/B` đều tách ra **độc lập từ `main`** (không tách từ nhau), chạy song song rồi từng nhánh merge về `main` qua PR riêng. Chỉ tách nhánh này từ nhánh kia khi nhánh sau **bắt buộc cần code** của nhánh trước mà nó chưa được merge (trường hợp hiếm, nên tránh).
 
 ### Quy trình từng bước
 1. Tạo nhánh từ `main` cho mỗi task: `git checkout -b feat/ten-tinh-nang`
